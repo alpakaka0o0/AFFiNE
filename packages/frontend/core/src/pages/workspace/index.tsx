@@ -43,6 +43,9 @@ export const loader: LoaderFunction = async args => {
     workspaceLoaderLogger.info('get cloud workspace atom');
 
     const workspace = await rootStore.get(workspaceAtom);
+    if (!workspace.doc.isLoaded) {
+      await workspace.doc.whenLoaded;
+    }
     return (() => {
       guidCompatibilityFix(workspace.doc);
       const blockVersions = workspace.meta.blockVersions;

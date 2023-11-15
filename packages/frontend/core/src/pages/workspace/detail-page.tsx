@@ -126,6 +126,9 @@ export const loader: LoaderFunction = async args => {
     rootStore.set(currentWorkspaceIdAtom, args.params.workspaceId);
   }
   const currentWorkspace = await rootStore.get(currentWorkspaceAtom);
+  if (!currentWorkspace.doc.isLoaded) {
+    await currentWorkspace.doc.whenLoaded;
+  }
   if (args.params.pageId) {
     const pageId = args.params.pageId;
     localStorage.setItem('last_page_id', pageId);
