@@ -55,6 +55,9 @@ export const createLocalProviders = (): DocProviderCreator[] => {
             connected = true;
           }
         },
+        get whenReady() {
+          return engine.waitForLoadedRootDoc();
+        },
         connect() {
           // TODO: actually connect
         },
@@ -101,6 +104,10 @@ export const createAffineProviders = (): DocProviderCreator[] => {
             }
             connected = true;
           }
+        },
+        get whenReady() {
+          console.log('!!!!!!!!!!!!!!!');
+          return engine.waitForLoadedRootDoc();
         },
         connect() {
           // TODO: actually connect

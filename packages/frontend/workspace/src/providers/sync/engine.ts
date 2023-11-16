@@ -35,8 +35,10 @@ import { SyncPeer, SyncPeerStatus } from './peer';
 export enum SyncEngineStatus {
   Stopped = 0,
   Retrying = 1,
-  Syncing = 2,
-  Synced = 3,
+  LoadingRootDoc = 2,
+  LoadingSubDoc = 3,
+  Syncing = 4,
+  Synced = 5,
 }
 
 export class SyncEngine {
@@ -73,7 +75,7 @@ export class SyncEngine {
     }
     this.abort = new AbortController();
 
-    this.status = SyncEngineStatus.Syncing;
+    this.status = SyncEngineStatus.LoadingRootDoc;
     this.sync(this.abort.signal).catch(err => {
       // should never reach here
       this.logger.error(err);
@@ -151,6 +153,18 @@ export class SyncEngine {
       }
     }
     for (const peer of peers) {
+      if (peer.status === SyncPeerStatus.LoadingSubDoc) {
+        status = SyncEngineStatus.LoadingSubDoc;
+        break;
+      }
+    }
+    for (const peer of peers) {
+      if (peer.status === SyncPeerStatus.LoadingRootDoc) {
+        status = SyncEngineStatus.LoadingRootDoc;
+        break;
+      }
+    }
+    for (const peer of peers) {
       if (peer.status === SyncPeerStatus.Retrying) {
         status = SyncEngineStatus.Retrying;
         break;
@@ -167,6 +181,30 @@ export class SyncEngine {
         new Promise<void>(resolve => {
           this.onStatusChange.on(status => {
             if (status == SyncEngineStatus.Synced) {
+              resolve();
+            }
+          });
+        }),
+        new Promise((_, reject) => {
+          if (abort?.aborted) {
+            reject(abort?.reason);
+          }
+          abort?.addEventListener('abort', () => {
+            reject(abort.reason);
+          });
+        }),
+      ]);
+    }
+  }
+
+  async waitForLoadedRootDoc(abort?: AbortSignal) {
+    if (this.status > SyncEngineStatus.LoadingRootDoc) {
+      return;
+    } else {
+      return Promise.race([
+        new Promise<void>(resolve => {
+          this.onStatusChange.on(status => {
+            if (status > SyncEngineStatus.LoadingRootDoc) {
               resolve();
             }
           });

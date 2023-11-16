@@ -1,4 +1,5 @@
-import type { SyncEngine } from '@affine/workspace/providers';
+import type { SyncEngine, SyncEngineStatus } from '@affine/workspace/providers';
+import { useEffect, useState } from 'react';
 
 import { useCurrentWorkspace } from './use-current-workspace';
 
@@ -10,4 +11,23 @@ export function useCurrentSyncEngine(): SyncEngine | undefined {
   )?.engine;
 
   return syncEngine;
+}
+
+export function useCurrentSyncEngineStatus(): SyncEngineStatus | undefined {
+  const syncEngine = useCurrentSyncEngine();
+  const [status, setStatus] = useState<SyncEngineStatus>();
+
+  useEffect(() => {
+    if (syncEngine) {
+      setStatus(syncEngine.status);
+      return syncEngine.onStatusChange.on(status => {
+        setStatus(status);
+      }).dispose;
+    } else {
+      setStatus(undefined);
+    }
+    return;
+  }, [syncEngine]);
+
+  return status;
 }

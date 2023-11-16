@@ -24,6 +24,12 @@ export const loader: LoaderFunction = async args => {
   workspaceLoaderLogger.info('start');
 
   const rootStore = getCurrentStore();
+
+  if (args.params.workspaceId) {
+    localStorage.setItem('last_workspace_id', args.params.workspaceId);
+    rootStore.set(currentWorkspaceIdAtom, args.params.workspaceId);
+  }
+
   const meta = await rootStore.get(rootWorkspacesMetadataAtom);
   workspaceLoaderLogger.info('meta loaded');
 
@@ -31,10 +37,7 @@ export const loader: LoaderFunction = async args => {
   if (!currentMetadata) {
     return redirect('/404');
   }
-  if (args.params.workspaceId) {
-    localStorage.setItem('last_workspace_id', args.params.workspaceId);
-    rootStore.set(currentWorkspaceIdAtom, args.params.workspaceId);
-  }
+
   if (!args.params.pageId) {
     rootStore.set(currentPageIdAtom, null);
   }
@@ -46,9 +49,11 @@ export const loader: LoaderFunction = async args => {
     if (!workspace.doc.isLoaded) {
       await workspace.doc.whenLoaded;
     }
+    workspaceLoaderLogger.info('workspace loaded');
     return (() => {
       guidCompatibilityFix(workspace.doc);
       const blockVersions = workspace.meta.blockVersions;
+      console.log(blockVersions);
       if (!blockVersions) {
         return true;
       }

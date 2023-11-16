@@ -114,6 +114,8 @@ const WorkspaceStatus = ({
     }
     switch (syncEngineStatus) {
       case SyncEngineStatus.Syncing:
+      case SyncEngineStatus.LoadingSubDoc:
+      case SyncEngineStatus.LoadingRootDoc:
         return 'Syncing with AFFiNE Cloud';
       case SyncEngineStatus.Retrying:
         return 'Sync disconnected due to unexpected issues, reconnecting.';
